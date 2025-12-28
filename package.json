@@ -2,6 +2,7 @@
   "name": "incr",
   "version": "2.0.1",
   "description": "Integer as a Service - A simple numeric counter API",
+  "packageManager": "pnpm@10.13.1",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
