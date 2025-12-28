@@ -1,6 +1,6 @@
 {
   "name": "incr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Integer as a Service - A simple numeric counter API",
   "type": "module",
   "main": "dist/index.js",
