@@ -1,6 +1,6 @@
 {
   "name": "incr",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Integer as a Service - A simple numeric counter API",
   "packageManager": "pnpm@10.13.1",
   "type": "module",
