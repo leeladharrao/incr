@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incr API - Counter as a Service</title>
+    <meta name="description"
+        content="Simple numeric counter API - track page views, button clicks, and events with ease">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text: #1a1a1a;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --accent: #2563eb;
+            --code-bg: #f3f4f6;
+            --success: #059669;
+            --warning: #d97706;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .intro {
+            max-width: 700px;
+            margin: 0 auto 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        nav {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+
+        h4 {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+            color: var(--text);
+        }
+
+        .card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .endpoint {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .method {
+            padding: 0.25rem 0.625rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .method.get {
+            background: #d1fae5;
+            color: var(--success);
+        }
+
+        .method.post {
+            background: #fed7aa;
+            color: var(--warning);
+        }
+
+        .path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .auth-required {
+            padding: 0.25rem 0.625rem;
+            background: #fee2e2;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .inline-code {
+            background: var(--code-bg);
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        ul,
+        ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .note {
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .note strong {
+            color: var(--text);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            font-size: 0.9375rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* FAQ Accordion */
+        .faq-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            text-align: left;
+            background: var(--bg-secondary);
+            border: none;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .faq-question:hover {
+            background: #e5e7eb;
+        }
+
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .faq-question.active::after {
+            content: '−';
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: var(--bg);
+        }
+
+        .faq-answer.active {
+            max-height: 500px;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .faq-answer p {
+            margin: 0;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            nav {
+                position: static;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: center;
+            }
+
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Incr API</h1>
+            <p class="subtitle">Counter as a Service</p>
+            <p class="intro">
+                A straightforward API for managing numeric counters. Perfect for tracking page visits,
+                monitoring button clicks, or counting any event in your application. Each counter lives
+                within a namespace and is identified by a unique key—accessible only to those who know it.
+            </p>
+            <div class="badges">
+                <span class="badge">Fastify</span>
+                <span class="badge">TypeScript</span>
+                <span class="badge">Upstash Redis</span>
+                <span class="badge">Free to Use</span>
+            </div>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#quickstart">Quick Start</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#endpoints">API Reference</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+        </nav>
+
+        <section id="overview">
+            <h2>Overview</h2>
+
+            <h3>What Can You Do?</h3>
+            <ul>
+                <li>Create and increment counters with simple HTTP requests</li>
+                <li>Retrieve counter values and metadata</li>
+                <li>Track page views, clicks, downloads, or any custom events</li>
+                <li>Use JSONP for cross-domain requests in older browsers</li>
+            </ul>
+
+            <h3>Key Concepts</h3>
+
+            <h4>Namespaces</h4>
+            <p class="description">
+                Namespaces prevent naming conflicts between different applications. We recommend using
+                your domain name as the namespace (e.g., <span class="inline-code">mysite.com</span>).
+                If you don't specify a namespace, counters are created in the default namespace.
+            </p>
+
+            <h4>Keys</h4>
+            <p class="description">
+                Each counter is identified by a key within its namespace. Keys must be 3-64 characters
+                long and can contain letters, numbers, underscores, hyphens, and dots. Pattern:
+                <span class="inline-code">^[A-Za-z0-9_-.]{3,64}$</span>
+            </p>
+
+            <h4>Reserved Keywords</h4>
+            <p class="description">
+                Special keywords are automatically replaced server-side based on the request:
+            </p>
+            <ul>
+                <li><span class="inline-code">:HOST:</span> - Replaced with the requesting domain</li>
+                <li><span class="inline-code">:PATH:</span> - Replaced with the URL path (slashes removed)</li>
+            </ul>
+            <p class="description">
+                <em>Note: Keywords shorter than 3 characters are left-padded with dots.</em>
+            </p>
+
+            <h4>Expiration</h4>
+            <p class="description">
+                Counters automatically expire after 6 months of inactivity. Each time you access a counter,
+                its expiration is reset, so actively used counters never expire.
+            </p>
+        </section>
+
+        <section id="quickstart">
+            <h2>Quick Start</h2>
+
+            <div class="card">
+                <h3>Step 1: Create a Counter</h3>
+                <p class="description">Create a counter with your namespace and a unique key:</p>
+                <pre><code>GET /create/myapp/pageviews</code></pre>
+                <p class="description"><strong>Response:</strong></p>
+                <pre><code>{
+  "key": "pageviews",
+  "namespace": "myapp",
+  "admin_key": "abc123def456...",
+  "value": 0
+}</code></pre>
+                <div class="note">
+                    <strong>Important:</strong> Save the admin_key! This is the only time you'll see it.
+                    You'll need it to delete, reset, or modify the counter later.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Step 2: Increment the Counter</h3>
+                <p class="description">Each request to the hit endpoint increases the counter by one:</p>
+                <pre><code>GET /hit/myapp/pageviews</code></pre>
+                <p class="description"><strong>Response:</strong></p>
+                <pre><code>{
+  "value": 1
+}</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Step 3: Retrieve the Value</h3>
+                <p class="description">Get the current value without incrementing:</p>
+                <pre><code>GET /get/myapp/pageviews</code></pre>
+                <p class="description"><strong>Response:</strong></p>
+                <pre><code>{
+  "value": 1
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="examples">
+            <h2>Usage Examples</h2>
+
+            <div class="card">
+                <h3>Tracking Page Views</h3>
+                <p class="description">Display the number of times a page has been visited:</p>
+
+                <h4>Using JSONP (Legacy Browser Support)</h4>
+                <pre><code>&lt;div id="visits"&gt;...&lt;/div&gt;
+
+&lt;script&gt;
+function displayVisits(response) {
+    document.getElementById('visits').innerText = response.value;
+}
+&lt;/script&gt;
+&lt;script async src="https://your-api.com/hit/mysite.com/visits?callback=displayVisits"&gt;&lt;/script&gt;</code></pre>
+
+                <h4>Using Fetch API (Modern Browsers)</h4>
+                <pre><code>fetch('https://your-api.com/hit/mysite.com/visits')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('visits').innerText = data.value;
+    });</code></pre>
+
+                <h4>Using XMLHttpRequest</h4>
+                <pre><code>var xhr = new XMLHttpRequest();
+xhr.open("GET", "https://your-api.com/hit/mysite.com/visits");
+xhr.responseType = "json";
+xhr.onload = function() {
+    document.getElementById('visits').innerText = this.response.value;
+}
+xhr.send();</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Tracking Button Clicks</h3>
+                <p class="description">Count how many times a button has been clicked:</p>
+                <pre><code>&lt;button onclick="trackClick()"&gt;Click Me!&lt;/button&gt;
+
+&lt;script&gt;
+function trackClick() {
+    fetch('https://your-api.com/hit/mysite.com/button-clicks')
+        .then(res => res.json())
+        .then(data => {
+            alert(`This button has been clicked ${data.value} times!`);
+        });
+}
+&lt;/script&gt;</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Per-Page Counters</h3>
+                <p class="description">Track visits for individual pages using unique keys:</p>
+                <pre><code>// Home page
+GET /hit/mysite.com/page-home
+
+// About page
+GET /hit/mysite.com/page-about
+
+// Product page
+GET /hit/mysite.com/page-product-123</code></pre>
+
+                <p class="description">Or use reserved keywords for automatic page tracking:</p>
+                <pre><code>// Automatically uses the current path
+GET /hit/mysite.com/:PATH:</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Python Example</h3>
+                <pre><code>import requests
+
+# Create a counter
+response = requests.get('https://your-api.com/create/myapp/downloads')
+data = response.json()
+admin_key = data['admin_key']
+
+# Increment the counter
+response = requests.get('https://your-api.com/hit/myapp/downloads')
+print(f"Downloads: {response.json()['value']}")
+
+# Reset using admin key
+headers = {'Authorization': f'Bearer {admin_key}'}
+requests.post('https://your-api.com/reset/myapp/downloads', headers=headers)</code></pre>
+            </div>
+        </section>
+
+        <section id="endpoints">
+            <h2>API Reference</h2>
+
+            <h3>Authentication & Rate Limits</h3>
+            <p class="description">
+                Administrative endpoints (delete, set, reset, update) require an admin key passed as a
+                Bearer token in the Authorization header. You receive this key when creating a counter.
+            </p>
+            <p class="description">
+                <strong>Rate Limiting:</strong> 30 requests per 10 seconds per IP address. When exceeded,
+                you'll receive a 429 status code. Check these headers to monitor your usage:
+            </p>
+            <ul>
+                <li><span class="inline-code">RateLimit-Remaining</span> - Requests left in current window</li>
+                <li><span class="inline-code">RateLimit-Reset</span> - Unix timestamp when limit resets</li>
+                <li><span class="inline-code">RateLimit-Policy</span> - Rate limit policy description</li>
+            </ul>
+
+            <h3>Public Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/healthcheck</span>
+                </div>
+                <p class="description">Check API health and uptime.</p>
+                <pre><code>Response: 200
+{
+  "status": "ok",
+  "uptime": "1h23m45s"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/stats</span>
+                </div>
+                <p class="description">Retrieve API statistics and usage information.</p>
+                <pre><code>Response: 200
+{
+  "commands": {
+    "create": 1234,
+    "get": 5678,
+    "hit": 9012,
+    "total": 15924
+  },
+  "total_keys": 1000,
+  "version": "1.0.0",
+  "shard": "production",
+  "uptime": "5h30m15s"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/create/:namespace/:key</span>
+                </div>
+                <p class="description">
+                    Create a new counter with optional starting value. Returns an admin key for management.
+                </p>
+                <p class="description">
+                    <strong>Query Parameters:</strong> <span class="inline-code">initializer</span> (optional) -
+                    Starting value (default: 0)
+                </p>
+                <pre><code>Request:
+GET /create/myapp/downloads?initializer=100
+
+Response: 201
+{
+  "key": "downloads",
+  "namespace": "myapp",
+  "admin_key": "a1b2c3d4e5f6...",
+  "value": 100
+}
+
+Error: 409 (if key exists)
+{
+  "error": "Key already exists, please use a different key."
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/create</span>
+                </div>
+                <p class="description">Create a counter with randomly generated namespace and key.</p>
+                <pre><code>Response: 201
+{
+  "key": "x7k9m2",
+  "namespace": "n4p8q1",
+  "admin_key": "a1b2c3d4e5f6...",
+  "value": 0
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/get/:namespace/:key</span>
+                </div>
+                <p class="description">
+                    Retrieve the current counter value without incrementing.
+                </p>
+                <p class="description">
+                    <strong>Query Parameters:</strong> <span class="inline-code">callback</span> (optional) - JSONP
+                    callback function
+                </p>
+                <pre><code>Request:
+GET /get/myapp/visits
+
+Response: 200
+{
+  "value": 42
+}
+
+Error: 404 (if key doesn't exist)
+{
+  "error": "Key not found"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/get/:key</span>
+                </div>
+                <p class="description">Get counter value from the default namespace.</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/hit/:namespace/:key</span>
+                </div>
+                <p class="description">
+                    Increment the counter by 1 and return the new value. Creates the counter if it doesn't exist.
+                </p>
+                <p class="description">
+                    <strong>Query Parameters:</strong> <span class="inline-code">callback</span> (optional) - JSONP
+                    callback function
+                </p>
+                <pre><code>Request:
+GET /hit/myapp/visits
+
+Response: 200
+{
+  "value": 43
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/hit/:key</span>
+                </div>
+                <p class="description">Increment counter in the default namespace.</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/info/:namespace/:key</span>
+                </div>
+                <p class="description">Get detailed counter information including expiration data.</p>
+                <pre><code>Response: 200
+{
+  "value": 42,
+  "full_key": "K:myapp:visits",
+  "is_genuine": true,
+  "expires_in": 172800,
+  "expires_str": "2d",
+  "exists": true
+}
+
+Response: 404 (if key doesn't exist)
+{
+  "value": -1,
+  "full_key": "default:nonexisting",
+  "is_genuine": true,
+  "expires_in": -2e-9,
+  "expires_str": "-2ns",
+  "exists": false
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="path">/info/:key</span>
+                </div>
+                <p class="description">Get counter info from the default namespace.</p>
+            </div>
+
+            <h3>Admin Endpoints</h3>
+            <p class="description" style="margin-bottom: 1.5rem;">
+                These endpoints require the <span class="inline-code">Authorization: Bearer YOUR_ADMIN_KEY</span>
+                header.
+            </p>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/delete/:namespace/:key</span>
+                    <span class="auth-required">Auth Required</span>
+                </div>
+                <p class="description">Permanently remove a counter.</p>
+                <pre><code>Request:
+POST /delete/myapp/visits
+Authorization: Bearer abc123...
+
+Response: 200
+{
+  "status": "ok",
+  "message": "Deleted key: myapp:visits"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/set/:namespace/:key</span>
+                    <span class="auth-required">Auth Required</span>
+                </div>
+                <p class="description">Set the counter to a specific value, overwriting the current value.</p>
+                <p class="description">
+                    <strong>Query Parameters:</strong> <span class="inline-code">value</span> (required) - New value
+                </p>
+                <pre><code>Request:
+POST /set/myapp/visits?value=1000
+Authorization: Bearer abc123...
+
+Response: 200
+{
+  "value": 1000
+}
+
+Error: 404 (if key doesn't exist)
+{
+  "error": "Key does not exist, please use a different key."
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/reset/:namespace/:key</span>
+                    <span class="auth-required">Auth Required</span>
+                </div>
+                <p class="description">Reset the counter to zero.</p>
+                <pre><code>Request:
+POST /reset/myapp/visits
+Authorization: Bearer abc123...
+
+Response: 200
+{
+  "value": 0
+}
+
+Error: 404 (if key doesn't exist)
+{
+  "error": "Key does not exist, please use a different key."
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="path">/update/:namespace/:key</span>
+                    <span class="auth-required">Auth Required</span>
+                </div>
+                <p class="description">Adjust the counter by a specific amount (positive or negative).</p>
+                <p class="description">
+                    <strong>Query Parameters:</strong> <span class="inline-code">value</span> (required) - Amount to add
+                    (negative to subtract)
+                </p>
+                <pre><code>Request:
+POST /update/myapp/visits?value=10
+Authorization: Bearer abc123...
+
+Response: 200
+{
+  "value": 52
+}
+
+Decrement example:
+POST /update/myapp/visits?value=-5
+{
+  "value": 47
+}
+
+Error: 404 (if key doesn't exist)
+{
+  "error": "Key does not exist, please first create it using /create."
+}</code></pre>
+            </div>
+        </section>
+
+        <section id="faq">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <button class="faq-question">Is this API free to use?</button>
+                <div class="faq-answer">
+                    <p>Yes, completely free. No registration or API keys required for basic usage.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">What are the rate limits?</button>
+                <div class="faq-answer">
+                    <p>The API allows 30 requests per 10 seconds per IP address. If you exceed this limit,
+                        you'll receive a 429 status code with a retry-after header. For higher limits,
+                        please contact the administrator.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">Can I delete a counter?</button>
+                <div class="faq-answer">
+                    <p>Yes, if you created the counter using the <span class="inline-code">/create</span> endpoint
+                        and saved the admin key. Use the <span class="inline-code">/delete</span> endpoint with
+                        your admin key to remove it.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">Do counters expire?</button>
+                <div class="faq-answer">
+                    <p>Counters expire after 6 months of inactivity. However, each time you access a counter
+                        (via get, hit, or info), its expiration is reset. Actively used counters never expire.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">What happens if I lose my admin key?</button>
+                <div class="faq-answer">
+                    <p>The admin key is shown only once when you create a counter. If you lose it, you won't
+                        be able to delete, reset, or modify that counter. However, you can still increment and
+                        read the counter value.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">Can I use this for high-traffic applications?</button>
+                <div class="faq-answer">
+                    <p>The API is built on Upstash Redis for high performance. If you're planning to make
+                        tens of thousands of requests, please reach out to discuss your use case.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">Does the API support CORS?</button>
+                <div class="faq-answer">
+                    <p>Yes, all endpoints support Cross-Origin Resource Sharing (CORS), allowing you to make
+                        requests from any domain.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Built with Fastify, TypeScript, and Upstash Redis</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="https://github.com/leeladharrao/incr" target="_blank">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // FAQ Accordion functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function () {
+                const answer = this.nextElementSibling;
+                const isActive = answer.classList.contains('active');
+
+                // Close all other answers
+                document.querySelectorAll('.faq-answer').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelectorAll('.faq-question').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Toggle current answer
+                if (!isActive) {
+                    answer.classList.add('active');
+                    this.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

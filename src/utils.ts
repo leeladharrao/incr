@@ -1,17 +1,62 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { CALLBACK_REGEX } from './constants.js';
 
-// Validation regex for keys and namespaces
-export const KEY_REGEX = /^[A-Za-z0-9_.-]{3,64}$/;
+/**
+ * Extract a user-friendly error message from an unknown error type.
+ * @param error - The error to extract a message from
+ * @returns A string error message
+ */
+export function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return 'Internal server error';
+}
 
-// Reserved words that get replaced server-side
-export const RESERVED_WORDS = [':HOST:', ':PATH:'];
+// Schema patterns
+const KEY_PATTERN = '^[A-Za-z0-9_.-]{3,64}$';
+const CALLBACK_PATTERN = '^[a-zA-Z_$][a-zA-Z0-9_$.[\\]]*$';
+
+export const CounterParamsSchema = {
+    type: 'object',
+    required: ['namespace', 'key'],
+    properties: {
+        namespace: { type: 'string', pattern: KEY_PATTERN },
+        key: { type: 'string', pattern: KEY_PATTERN },
+    },
+};
+
+export const CounterKeyParamsSchema = {
+    type: 'object',
+    required: ['key'],
+    properties: {
+        key: { type: 'string', pattern: KEY_PATTERN },
+    },
+};
+
+export const CallbackQuerySchema = {
+    type: 'object',
+    properties: {
+        callback: { type: 'string', pattern: CALLBACK_PATTERN },
+    },
+};
+
+export const InitializerQuerySchema = {
+    type: 'object',
+    properties: {
+        initializer: { type: 'string', pattern: '^[0-9]+$' },
+    },
+};
+
+// ... keep existing functions but remove validateKey and validateNamespace if no longer needed, 
+// OR keep them for service-level validation if we want double safety. 
+// For now I will keep them but maybe reimplement them using the regex constants to avoid duplication.
 
 export function validateKey(key: string): boolean {
-    return KEY_REGEX.test(key);
+    return new RegExp(KEY_PATTERN).test(key);
 }
 
 export function validateNamespace(namespace: string): boolean {
-    return KEY_REGEX.test(namespace);
+    return new RegExp(KEY_PATTERN).test(namespace);
 }
 
 export function formatDuration(seconds: number): string {
@@ -120,13 +165,26 @@ export function replaceReservedWords(str: string, request: FastifyRequest): stri
     return result;
 }
 
-// Send JSONP response if callback is provided, otherwise send JSON
-export function sendResponse(
+/**
+ * Send JSONP response if callback is provided, otherwise send JSON.
+ * Validates callback name to prevent XSS attacks.
+ * @param reply - Fastify reply object
+ * @param data - Data to send in response
+ * @param callback - Optional JSONP callback function name
+ * @returns Fastify reply
+ * @throws {Error} If callback name is invalid
+ */
+export function sendResponse<T>(
     reply: FastifyReply,
-    data: any,
+    data: T,
     callback?: string
 ): FastifyReply {
     if (callback) {
+        // Validate callback name to prevent XSS attacks
+        if (!CALLBACK_REGEX.test(callback)) {
+            throw new Error('Invalid callback name');
+        }
+
         // JSONP response
         const jsonpResponse = `${callback}(${JSON.stringify(data)})`;
         return reply
