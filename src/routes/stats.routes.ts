@@ -1,5 +1,4 @@
 import type { FastifyInstance } from 'fastify';
-import { counterService } from '../services/counter.service.js';
 import { redis } from '../redis.js';
 import { formatUptime } from '../utils.js';
 import { config } from '../config.js';
@@ -8,7 +7,7 @@ const startTime = Date.now();
 
 export async function statsRoutes(fastify: FastifyInstance) {
     // Health check endpoint
-    fastify.get('/healthcheck', async (request, reply) => {
+    fastify.get('/healthcheck', async () => {
         const uptime = Math.floor((Date.now() - startTime) / 1000);
 
         return {
@@ -18,7 +17,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
     });
 
     // Stats endpoint
-    fastify.get('/stats', async (request, reply) => {
+    fastify.get('/stats', async (_request, reply) => {
         try {
             const uptime = Math.floor((Date.now() - startTime) / 1000);
 
@@ -54,7 +53,7 @@ export async function statsRoutes(fastify: FastifyInstance) {
     });
 
     // Docs redirect
-    fastify.get('/docs', async (request, reply) => {
+    fastify.get('/docs', async (_request, reply) => {
         return reply.redirect('https://github.com/leeladharrao/incr');
     });
 }
