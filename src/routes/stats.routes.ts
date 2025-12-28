@@ -29,9 +29,8 @@ export async function statsRoutes(fastify: FastifyInstance) {
                 redis.get<number>('S:commands:total') || 0,
             ]);
 
-            // Get total keys (approximate - count keys with K: prefix)
-            const keys = await redis.keys('K:*');
-            const totalKeys = keys.length;
+            // Get total keys (approximate - maintained by counters)
+            const totalKeys = await redis.get<number>('S:stats:total_keys') || 0;
 
             return {
                 commands: {

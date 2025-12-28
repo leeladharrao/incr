@@ -1,158 +1,173 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { counterService } from '../services/counter.service.js';
-import { replaceReservedWords, sendResponse } from '../utils.js';
+import {
+    replaceReservedWords,
+    sendResponse,
+    getErrorMessage,
+    CounterParamsSchema,
+    CounterKeyParamsSchema,
+    CallbackQuerySchema,
+    InitializerQuerySchema
+} from '../utils.js';
+import { DEFAULT_NAMESPACE } from '../constants.js';
+
+// Pre-validation hook to replace reserved words
+const replaceWordsHook = async (request: FastifyRequest) => {
+    const params = request.params as { namespace?: string; key?: string };
+    if (params.namespace) {
+        params.namespace = replaceReservedWords(params.namespace, request);
+    }
+    if (params.key) {
+        params.key = replaceReservedWords(params.key, request);
+    }
+};
 
 export async function counterRoutes(fastify: FastifyInstance) {
-    // GET /get/:namespace/:key - Get counter value
-    fastify.get('/get/:namespace/:key', async (request, reply) => {
-        let { namespace, key } = request.params as { namespace: string; key: string };
+    // GET /get/:namespace/:key
+    fastify.get('/get/:namespace/:key', {
+        schema: {
+            params: CounterParamsSchema,
+            querystring: CallbackQuerySchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        // Validation handled by schema
+        const { namespace, key } = request.params as { namespace: string; key: string };
         const { callback } = request.query as { callback?: string };
-
-        // Replace reserved words
-        namespace = replaceReservedWords(namespace, request);
-        key = replaceReservedWords(key, request);
 
         try {
             const value = await counterService.get(namespace, key);
-
             if (value === null) {
                 return reply.status(404).send({ error: 'Key not found' });
             }
-
             // Track stats
-            await counterService['incrementStat']('get');
-
+            await counterService.incrementStat('get');
             return sendResponse(reply, { value }, callback);
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /get/:key - Get counter value (default namespace)
-    fastify.get('/get/:key', async (request, reply) => {
-        let { key } = request.params as { key: string };
+    // GET /get/:key
+    fastify.get('/get/:key', {
+        schema: {
+            params: CounterKeyParamsSchema,
+            querystring: CallbackQuerySchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { key } = request.params as { key: string };
         const { callback } = request.query as { callback?: string };
 
-        // Replace reserved words
-        key = replaceReservedWords(key, request);
+        // Use defaults
+        const namespace = DEFAULT_NAMESPACE;
 
         try {
-            const value = await counterService.get('default', key);
-
+            const value = await counterService.get(namespace, key);
             if (value === null) {
                 return reply.status(404).send({ error: 'Key not found' });
             }
-
-            // Track stats
-            await counterService['incrementStat']('get');
-
+            await counterService.incrementStat('get');
             return sendResponse(reply, { value }, callback);
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /hit/:namespace/:key - Increment counter
-    fastify.get('/hit/:namespace/:key', async (request, reply) => {
-        let { namespace, key } = request.params as { namespace: string; key: string };
+    // GET /hit/:namespace/:key
+    fastify.get('/hit/:namespace/:key', {
+        schema: {
+            params: CounterParamsSchema,
+            querystring: CallbackQuerySchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { namespace, key } = request.params as { namespace: string; key: string };
         const { callback } = request.query as { callback?: string };
-
-        // Replace reserved words
-        namespace = replaceReservedWords(namespace, request);
-        key = replaceReservedWords(key, request);
 
         try {
             const value = await counterService.hit(namespace, key);
             return sendResponse(reply, { value }, callback);
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /hit/:key - Increment counter (default namespace)
-    fastify.get('/hit/:key', async (request, reply) => {
-        let { key } = request.params as { key: string };
+    // GET /hit/:key
+    fastify.get('/hit/:key', {
+        schema: {
+            params: CounterKeyParamsSchema,
+            querystring: CallbackQuerySchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { key } = request.params as { key: string };
         const { callback } = request.query as { callback?: string };
-
-        // Replace reserved words
-        key = replaceReservedWords(key, request);
+        const namespace = DEFAULT_NAMESPACE;
 
         try {
-            const value = await counterService.hit('default', key);
+            const value = await counterService.hit(namespace, key);
             return sendResponse(reply, { value }, callback);
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /info/:namespace/:key - Get counter info
-    fastify.get('/info/:namespace/:key', async (request, reply) => {
-        let { namespace, key } = request.params as { namespace: string; key: string };
-
-        // Replace reserved words
-        namespace = replaceReservedWords(namespace, request);
-        key = replaceReservedWords(key, request);
+    // GET /info/:namespace/:key
+    fastify.get('/info/:namespace/:key', {
+        schema: {
+            params: CounterParamsSchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { namespace, key } = request.params as { namespace: string; key: string };
 
         try {
             const info = await counterService.info(namespace, key);
-
             if (!info.exists) {
                 return reply.status(404).send(info);
             }
-
             return info;
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /info/:key - Get counter info (default namespace)
-    fastify.get('/info/:key', async (request, reply) => {
-        let { key } = request.params as { key: string };
-
-        // Replace reserved words
-        key = replaceReservedWords(key, request);
+    // GET /info/:key
+    fastify.get('/info/:key', {
+        schema: {
+            params: CounterKeyParamsSchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { key } = request.params as { key: string };
+        const namespace = DEFAULT_NAMESPACE;
 
         try {
-            const info = await counterService.info('default', key);
-
+            const info = await counterService.info(namespace, key);
             if (!info.exists) {
                 return reply.status(404).send(info);
             }
-
             return info;
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /create/:namespace/:key - Create counter with namespace and key
-    fastify.get('/create/:namespace/:key', async (request, reply) => {
-        let { namespace, key } = request.params as { namespace: string; key: string };
+    // GET /create/:namespace/:key
+    fastify.get('/create/:namespace/:key', {
+        schema: {
+            params: CounterParamsSchema,
+            querystring: InitializerQuerySchema,
+        },
+        preValidation: replaceWordsHook,
+    }, async (request, reply) => {
+        const { namespace, key } = request.params as { namespace: string; key: string };
         const { initializer } = request.query as { initializer?: string };
-
-        // Replace reserved words
-        namespace = replaceReservedWords(namespace, request);
-        key = replaceReservedWords(key, request);
 
         try {
             const initialValue = initializer ? parseInt(initializer, 10) : 0;
-
-            if (isNaN(initialValue)) {
-                return reply.status(400).send({ error: 'Invalid initializer value' });
-            }
+            // initializer checked by schema pattern but parseInt is good to keep or cast
 
             const result = await counterService.create(namespace, key, initialValue);
             return reply.status(201).send(result);
@@ -160,29 +175,25 @@ export async function counterRoutes(fastify: FastifyInstance) {
             if (error instanceof Error && error.message.includes('already exists')) {
                 return reply.status(409).send({ error: error.message });
             }
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 
-    // GET /create - Create counter with random namespace and key
-    fastify.get('/create', async (request, reply) => {
+    // GET /create
+    fastify.get('/create', {
+        schema: {
+            querystring: InitializerQuerySchema,
+        },
+    }, async (request, reply) => {
         const { initializer } = request.query as { initializer?: string };
 
         try {
             const initialValue = initializer ? parseInt(initializer, 10) : 0;
-
-            if (isNaN(initialValue)) {
-                return reply.status(400).send({ error: 'Invalid initializer value' });
-            }
-
             const result = await counterService.createRandom(initialValue);
             return reply.status(201).send(result);
         } catch (error) {
-            return reply.status(500).send({
-                error: error instanceof Error ? error.message : 'Internal server error',
-            });
+            return reply.status(500).send({ error: getErrorMessage(error) });
         }
     });
 }
+
