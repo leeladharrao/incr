@@ -7,9 +7,11 @@ import {
     CounterParamsSchema,
     CounterKeyParamsSchema,
     CallbackQuerySchema,
-    InitializerQuerySchema
+    InitializerQuerySchema,
+    parseInteger
 } from '../utils.js';
 import { DEFAULT_NAMESPACE } from '../constants.js';
+
 
 // Pre-validation hook to replace reserved words
 const replaceWordsHook = async (request: FastifyRequest) => {
@@ -166,7 +168,7 @@ export async function counterRoutes(fastify: FastifyInstance) {
         const { initializer } = request.query as { initializer?: string };
 
         try {
-            const initialValue = initializer ? parseInt(initializer, 10) : 0;
+            const initialValue = parseInteger(initializer, 0);
             // initializer checked by schema pattern but parseInt is good to keep or cast
 
             const result = await counterService.create(namespace, key, initialValue);
@@ -188,9 +190,10 @@ export async function counterRoutes(fastify: FastifyInstance) {
         const { initializer } = request.query as { initializer?: string };
 
         try {
-            const initialValue = initializer ? parseInt(initializer, 10) : 0;
+            const initialValue = parseInteger(initializer, 0);
             const result = await counterService.createRandom(initialValue);
             return reply.status(201).send(result);
+
         } catch (error) {
             return reply.status(500).send({ error: getErrorMessage(error) });
         }

@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { counterService } from '../services/counter.service.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { CounterParamsSchema, getErrorMessage } from '../utils.js';
+import { CounterParamsSchema, getErrorMessage, parseInteger } from '../utils.js';
 
 const ValueQuerySchema = {
+
     type: 'object',
     required: ['value'],
     properties: {
@@ -50,8 +51,9 @@ export async function adminRoutes(fastify: FastifyInstance) {
         const { value } = request.query as { value: string };
         const adminKey = request.adminKey!;
 
-        const numValue = parseInt(value, 10);
-        // Schema guarantees pattern, but parseInt is still safe.
+        const numValue = parseInteger(value, 0);
+        // Schema guarantees pattern, but parseInteger provides extra safety.
+
 
         try {
             const newValue = await counterService.set(namespace, key, numValue, adminKey);
@@ -105,9 +107,11 @@ export async function adminRoutes(fastify: FastifyInstance) {
         const { value } = request.query as { value: string };
         const adminKey = request.adminKey!;
 
-        const amount = parseInt(value, 10);
+        const amount = parseInteger(value, 0);
+
 
         try {
+
             const newValue = await counterService.update(namespace, key, amount, adminKey);
             return { value: newValue };
         } catch (error) {

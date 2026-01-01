@@ -12,7 +12,25 @@ export function getErrorMessage(error: unknown): string {
     return 'Internal server error';
 }
 
+/**
+ * Parse a string into an integer with a default fallback.
+ * @param value - The string value to parse
+ * @param defaultValue - The default value if parsing fails or value is undefined
+ * @returns The parsed integer or default value
+ */
+export function parseInteger(value: string | undefined, defaultValue: number): number {
+    if (value === undefined || value === '') {
+        return defaultValue;
+    }
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) {
+        return defaultValue;
+    }
+    return parsed;
+}
+
 // Schema patterns
+
 const KEY_PATTERN = '^[A-Za-z0-9_.-]{3,64}$';
 const CALLBACK_PATTERN = '^[a-zA-Z_$][a-zA-Z0-9_$.[\\]]*$';
 

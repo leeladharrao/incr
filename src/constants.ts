@@ -32,3 +32,7 @@ export const BODY_SIZE_LIMIT = 1048576; // 1MB
 export const RANDOM_NAMESPACE_LENGTH = 10;
 export const RANDOM_KEY_LENGTH = 10;
 export const ADMIN_KEY_LENGTH = 32;
+
+// API Response constants
+export const NON_EXISTENT_TTL = -2e-9;
+

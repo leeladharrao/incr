@@ -509,10 +509,10 @@ function displayVisits(response) {
     document.getElementById('visits').innerText = response.value;
 }
 &lt;/script&gt;
-&lt;script async src="https://your-api.com/hit/mysite.com/visits?callback=displayVisits"&gt;&lt;/script&gt;</code></pre>
+&lt;script async src="https://incr.itsleeladhar.com/hit/mysite.com/visits?callback=displayVisits"&gt;&lt;/script&gt;</code></pre>
 
                 <h4>Using Fetch API (Modern Browsers)</h4>
-                <pre><code>fetch('https://your-api.com/hit/mysite.com/visits')
+                <pre><code>fetch('https://incr.itsleeladhar.com/hit/mysite.com/visits')
     .then(res => res.json())
     .then(data => {
         document.getElementById('visits').innerText = data.value;
@@ -520,7 +520,7 @@ function displayVisits(response) {
 
                 <h4>Using XMLHttpRequest</h4>
                 <pre><code>var xhr = new XMLHttpRequest();
-xhr.open("GET", "https://your-api.com/hit/mysite.com/visits");
+xhr.open("GET", "https://incr.itsleeladhar.com/hit/mysite.com/visits");
 xhr.responseType = "json";
 xhr.onload = function() {
     document.getElementById('visits').innerText = this.response.value;
@@ -535,7 +535,7 @@ xhr.send();</code></pre>
 
 &lt;script&gt;
 function trackClick() {
-    fetch('https://your-api.com/hit/mysite.com/button-clicks')
+    fetch('https://incr.itsleeladhar.com/hit/mysite.com/button-clicks')
         .then(res => res.json())
         .then(data => {
             alert(`This button has been clicked ${data.value} times!`);
@@ -566,17 +566,17 @@ GET /hit/mysite.com/:PATH:</code></pre>
                 <pre><code>import requests
 
 # Create a counter
-response = requests.get('https://your-api.com/create/myapp/downloads')
+response = requests.get('https://incr.itsleeladhar.com/create/myapp/downloads')
 data = response.json()
 admin_key = data['admin_key']
 
 # Increment the counter
-response = requests.get('https://your-api.com/hit/myapp/downloads')
+response = requests.get('https://incr.itsleeladhar.com/hit/myapp/downloads')
 print(f"Downloads: {response.json()['value']}")
 
 # Reset using admin key
 headers = {'Authorization': f'Bearer {admin_key}'}
-requests.post('https://your-api.com/reset/myapp/downloads', headers=headers)</code></pre>
+requests.post('https://incr.itsleeladhar.com/reset/myapp/downloads', headers=headers)</code></pre>
             </div>
         </section>
 

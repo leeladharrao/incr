@@ -1,9 +1,10 @@
 import { nanoid } from 'nanoid';
 import { redis, buildKey, buildAdminKey, DEFAULT_EXPIRATION } from '../redis.js';
 import { validateKey, validateNamespace, formatDuration } from '../utils.js';
-import { RANDOM_NAMESPACE_LENGTH, RANDOM_KEY_LENGTH, ADMIN_KEY_LENGTH } from '../constants.js';
+import { RANDOM_NAMESPACE_LENGTH, RANDOM_KEY_LENGTH, ADMIN_KEY_LENGTH, NON_EXISTENT_TTL } from '../constants.js';
 
 export interface CounterInfo {
+
     value: number;
     full_key: string;
     is_genuine: boolean;
@@ -111,9 +112,10 @@ export class CounterService {
         ]);
 
         const exists = value !== null;
-        const expiresIn = exists ? ttl : -2e-9;
+        const expiresIn = exists ? ttl : NON_EXISTENT_TTL;
 
         return {
+
             value: value ?? -1,
             full_key: fullKey,
             is_genuine: adminExists === 0, // true if no admin key (created via /hit)
